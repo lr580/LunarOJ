@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DB:lunaroj}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3s
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+app:
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:lunar-oj}
+      secret: ${JWT_SECRET:Generalized-SAM-Parent-Tree-Gaussian-Elimination-Probability-DP} #建议部署人员修改
+      access-token-expire-seconds: ${JWT_ACCESS_EXPIRE_SECONDS:1800} # 30min
+      refresh-token-expire-seconds: ${JWT_REFRESH_EXPIRE_SECONDS:604800} #7天

@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    password: your_mysql_password
+  data:
+    redis:
+      password: your_redis_password_or_empty
+
+app:
+  security:
+    jwt:
+      secret: replace-with-a-long-random-secret-at-least-32-chars
