@@ -11,3 +11,10 @@ logging:
   level:
     root: INFO
     com.lunaroj: INFO
+
+lunaroj:
+  init:
+    root:
+      enabled: ${ROOT_INIT_ENABLED:false}
+      username: ${ROOT_INIT_USERNAME:root}
+      password: ${ROOT_INIT_PASSWORD:dynamicCD+ACAM}
