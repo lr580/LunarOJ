@@ -16,16 +16,12 @@ import com.lunaroj.common.exception.BusinessException;
 import com.lunaroj.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -158,30 +154,12 @@ public class UserProfileServiceImpl implements UserProfileService {
                     refreshKeys.add(refreshSessionKey(userId, tokenId));
                 }
             }
-        } else {
-            // Backward compatibility for refresh sessions created before index rollout.
-            refreshKeys.addAll(scanRefreshKeysByUser(userId));
         }
 
         if (!refreshKeys.isEmpty()) {
             stringRedisTemplate.delete(refreshKeys);
         }
         stringRedisTemplate.delete(refreshIndexKey);
-    }
-
-    private Set<String> scanRefreshKeysByUser(Long userId) {
-        String pattern = AUTH_REFRESH_KEY_PREFIX + userId + ":*";
-        Set<String> refreshKeys = stringRedisTemplate.execute((RedisConnection connection) -> {
-            Set<String> matched = new HashSet<>();
-            ScanOptions options = ScanOptions.scanOptions().match(pattern).count(200).build();
-            try (Cursor<byte[]> cursor = connection.scan(options)) {
-                while (cursor.hasNext()) {
-                    matched.add(new String(cursor.next(), StandardCharsets.UTF_8));
-                }
-            }
-            return matched;
-        });
-        return refreshKeys == null ? new HashSet<>() : refreshKeys;
     }
 
     private String refreshSessionKey(Long userId, String tokenId) {
