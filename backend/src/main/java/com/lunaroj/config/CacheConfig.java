@@ -1,7 +1,7 @@
 package com.lunaroj.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.lunaroj.auth.service.PermissionGroupService;
+import com.lunaroj.service.PermissionGroupService;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -29,3 +29,4 @@ public class CacheConfig {
         return cacheManager;
     }
 }
+
