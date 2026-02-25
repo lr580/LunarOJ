@@ -678,12 +678,6 @@ button:disabled {
   gap: 8px;
 }
 
-.profile-debug-box div {
-  border-style: dashed;
-  border-color: #9bb2d6;
-  background: #f3f8ff;
-}
-
 .profile-debug-box dt {
   color: #47658f;
 }
@@ -743,7 +737,12 @@ button:disabled {
 }
 
 .profile-info-list.profile-debug-box {
-  margin: 0 0 12px;
+  margin: 10px 0 12px;
+}
+
+.profile-info-list.profile-debug-box div {
+  border: 1px dashed #9bb2d6;
+  background: #f3f8ff;
 }
 
 .profile-info-list div {

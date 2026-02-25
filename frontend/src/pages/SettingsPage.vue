@@ -48,17 +48,6 @@ const basicFeedback = reactive({ type: "", text: "" });
 const profileFeedback = reactive({ type: "", text: "" });
 const passwordFeedback = reactive({ type: "", text: "" });
 
-function formatDateTime(value) {
-  if (!value) {
-    return "-";
-  }
-  const dt = new Date(value);
-  if (Number.isNaN(dt.getTime())) {
-    return String(value);
-  }
-  return dt.toLocaleString("zh-CN", { hour12: false });
-}
-
 const username = computed(() => {
   if (typeof profile.value?.username === "string" && profile.value.username.trim()) {
     return profile.value.username.trim();
@@ -68,17 +57,6 @@ const username = computed(() => {
   }
   return "-";
 });
-
-const permissionGroupName = computed(() => {
-  if (typeof profile.value?.permissionGroupName === "string" && profile.value.permissionGroupName.trim()) {
-    return profile.value.permissionGroupName.trim();
-  }
-  return "普通用户";
-});
-
-const emailVerified = computed(() => profile.value?.emailVerified === true);
-const createdAtText = computed(() => formatDateTime(profile.value?.createdAt));
-const lastLoginText = computed(() => formatDateTime(profile.value?.lastLoginAt));
 const profileLength = computed(() => String(profileForm.profile || "").length);
 
 const activeFeedback = computed(() => {
@@ -298,10 +276,6 @@ onMounted(() => {
           <div v-if="activeTab === 'basic'" class="settings-section">
             <div class="settings-grid">
               <label>
-                用户名（只读）
-                <input :value="username" class="settings-input" disabled />
-              </label>
-              <label>
                 昵称
                 <input v-model="basicForm.nickname" class="settings-input" maxlength="64" />
               </label>
@@ -313,21 +287,6 @@ onMounted(() => {
                   maxlength="191"
                   placeholder="留空表示解绑邮箱"
                 />
-                <small class="settings-inline-tip">
-                  {{ emailVerified ? "邮箱状态：已验证" : "邮箱状态：未验证" }}
-                </small>
-              </label>
-              <label>
-                权限组（只读）
-                <input :value="permissionGroupName" class="settings-input" disabled />
-              </label>
-              <label>
-                账号创建时间（只读）
-                <input :value="createdAtText" class="settings-input" disabled />
-              </label>
-              <label>
-                最近登录时间（只读）
-                <input :value="lastLoginText" class="settings-input" disabled />
               </label>
             </div>
 
