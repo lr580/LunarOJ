@@ -18,7 +18,8 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager(
                 PermissionGroupService.CACHE_NAME_GROUP_ID_BY_NAME,
-                PermissionGroupService.CACHE_NAME_GROUP_DISPLAY_NAME_BY_ID
+                PermissionGroupService.CACHE_NAME_GROUP_DISPLAY_NAME_BY_ID,
+                PermissionGroupService.CACHE_NAME_GROUP_NAME_BY_ID
         );
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()

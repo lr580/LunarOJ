@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.isNull;
@@ -33,7 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandler.class)
-class AuthControllerIntegrationTest {
+@ActiveProfiles("test")
+class AuthControllerWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -121,6 +123,36 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.refreshToken").value("r-token-new"))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.expiresIn").value(1800));
+    }
+
+    @Test
+    void refreshShouldReturnValidationErrorWhenRefreshTokenMissing() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.VALIDATION_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value("refreshToken 不能为空"));
+    }
+
+    @Test
+    void loginShouldReturnBadRequestWhenRequestBodyMalformed() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.BAD_REQUEST.getCode()))
+                .andExpect(jsonPath("$.message").value("请求体格式错误"));
+    }
+
+    @Test
+    void captchaShouldMapUnhandledExceptionToInternalError() throws Exception {
+        when(captchaService.generateCaptcha()).thenThrow(new RuntimeException("boom"));
+
+        mockMvc.perform(get("/api/auth/captcha"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INTERNAL_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INTERNAL_ERROR.getMessage()));
     }
 
     @Test

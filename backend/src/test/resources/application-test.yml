@@ -1,0 +1,7 @@
+app:
+  security:
+    jwt:
+      issuer: test-issuer
+      secret: test-secret-for-webmvc-tests
+      access-token-expire-seconds: 1800
+      refresh-token-expire-seconds: 604800

@@ -2,6 +2,7 @@ package com.lunaroj.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lunaroj.common.error.ErrorCode;
+import com.lunaroj.common.exception.GlobalExceptionHandler;
 import com.lunaroj.model.vo.UserProfileVO;
 import com.lunaroj.model.vo.UserPublicProfileVO;
 import com.lunaroj.security.JwtAuthenticationFilter;
@@ -11,13 +12,15 @@ import com.lunaroj.service.UserProfileService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -25,6 +28,7 @@ import java.util.Collections;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -33,9 +37,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class UserControllerIntegrationTest {
+@Import(GlobalExceptionHandler.class)
+@ActiveProfiles("test")
+class UserControllerWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,6 +71,17 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.username").value("bob"))
                 .andExpect(jsonPath("$.data.permissionGroupName").value("普通用户"));
+    }
+
+    @Test
+    void getUserPublicProfileShouldMapUnhandledExceptionToInternalError() throws Exception {
+        doThrow(new RuntimeException("boom"))
+                .when(userProfileService).getUserPublicProfileByUsername("bob");
+
+        mockMvc.perform(get("/api/users/bob/profile"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INTERNAL_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INTERNAL_ERROR.getMessage()));
     }
 
     @Test
@@ -113,6 +130,17 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ErrorCode.VALIDATION_ERROR.getCode()))
                 .andExpect(jsonPath("$.message").value("邮箱格式不正确"));
+    }
+
+    @Test
+    void updateBasicShouldReturnBadRequestWhenRequestBodyMalformed() throws Exception {
+        mockMvc.perform(put("/api/users/me/basic")
+                        .with(authentication(buildAuthentication(1L, "alice")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.BAD_REQUEST.getCode()))
+                .andExpect(jsonPath("$.message").value("请求体格式错误"));
     }
 
     @Test
