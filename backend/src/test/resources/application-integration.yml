@@ -4,8 +4,33 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_TEST_DB:lunaroj-test}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: ${MYSQL_TEST_USER:root}
     password: ${MYSQL_TEST_PASSWORD:1437581}
+  data:
+    redis:
+      host: ${REDIS_TEST_HOST:${REDIS_HOST:127.0.0.1}}
+      port: ${REDIS_TEST_PORT:${REDIS_PORT:6379}}
+      password: ${REDIS_TEST_PASSWORD:${REDIS_PASSWORD:}}
+      database: ${REDIS_TEST_DB:${REDIS_DB:0}}
+      timeout: 3s
 
 lunaroj:
   init:
     root:
       enabled: false
+
+app:
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:lunar-oj}
+      secret: ${JWT_SECRET:Generalized-SAM-Parent-Tree-Gaussian-Elimination-Probability-DP}
+      access-token-expire-seconds: ${JWT_ACCESS_EXPIRE_SECONDS:1800}
+      refresh-token-expire-seconds: ${JWT_REFRESH_EXPIRE_SECONDS:604800}
+
+stress:
+  auth:
+    register-users: 500
+    login-users: 500
+    login-max-seconds: 60
+    request-timeout-seconds: 20
+    ready-timeout-seconds: 30
+    stage-timeout-seconds: 180
+    captcha-ttl-seconds: 300
