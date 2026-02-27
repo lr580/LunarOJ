@@ -7,6 +7,8 @@ public interface CaptchaService {
     CaptchaVO generateCaptcha();
 
     void verifyCaptcha(String captchaId, String captchaCode);
+
+    long getCaptchaExpireSeconds();
 }
 
 

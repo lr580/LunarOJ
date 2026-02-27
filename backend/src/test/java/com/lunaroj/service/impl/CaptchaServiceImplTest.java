@@ -32,12 +32,13 @@ class CaptchaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        captchaService = new CaptchaServiceImpl(stringRedisTemplate);
-        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        captchaService = new CaptchaServiceImpl(stringRedisTemplate, 300L);
     }
 
     @Test
     void generateCaptchaShouldStoreLowercaseCodeInRedis() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+
         CaptchaVO captcha = captchaService.generateCaptcha();
 
         assertThat(captcha.getCaptchaId()).isNotBlank();
@@ -55,6 +56,7 @@ class CaptchaServiceImplTest {
 
     @Test
     void verifyCaptchaShouldDeleteKeyWhenVerificationPassed() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("auth:captcha:cid")).thenReturn("abcd");
 
         captchaService.verifyCaptcha("cid", "ABcD");
@@ -64,6 +66,7 @@ class CaptchaServiceImplTest {
 
     @Test
     void verifyCaptchaShouldDeleteKeyAndThrowWhenCodeMismatch() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("auth:captcha:cid")).thenReturn("abcd");
 
         assertThatThrownBy(() -> captchaService.verifyCaptcha("cid", "efgh"))
@@ -75,6 +78,7 @@ class CaptchaServiceImplTest {
 
     @Test
     void verifyCaptchaShouldThrowWhenCaptchaMissingOrExpired() {
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("auth:captcha:cid")).thenReturn(null);
 
         assertThatThrownBy(() -> captchaService.verifyCaptcha("cid", "abcd"))
@@ -82,5 +86,10 @@ class CaptchaServiceImplTest {
                 .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode()).isEqualTo(ErrorCode.CAPTCHA_INVALID));
 
         verify(stringRedisTemplate, never()).delete("auth:captcha:cid");
+    }
+
+    @Test
+    void getCaptchaExpireSecondsShouldReturnConfiguredValue() {
+        assertThat(captchaService.getCaptchaExpireSeconds()).isEqualTo(300L);
     }
 }

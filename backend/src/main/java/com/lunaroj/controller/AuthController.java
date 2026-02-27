@@ -39,6 +39,11 @@ public class AuthController {
         return ApiResponse.success(captchaService.generateCaptcha());
     }
 
+    @GetMapping("/captcha-expire-seconds")
+    public ApiResponse<Long> captchaExpireSeconds() {
+        return ApiResponse.success(captchaService.getCaptchaExpireSeconds());
+    }
+
     @PostMapping("/register")
     public ApiResponse<Void> register(@Valid @RequestBody RegisterDTO request) {
         authService.register(request);

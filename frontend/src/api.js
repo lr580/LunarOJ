@@ -293,6 +293,10 @@ export async function fetchCaptcha() {
   return request("/auth/captcha");
 }
 
+export async function fetchCaptchaExpireSeconds() {
+  return request("/auth/captcha-expire-seconds");
+}
+
 export async function fetchRegisterEnabled() {
   return request("/auth/register-enabled");
 }

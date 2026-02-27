@@ -354,6 +354,12 @@ a {
   font-size: 0.8rem;
 }
 
+.captcha-countdown-tip {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-1);
+}
+
 .captcha-expired-tip {
   justify-self: start;
   border: none;

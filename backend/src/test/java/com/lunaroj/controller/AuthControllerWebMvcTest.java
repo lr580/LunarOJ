@@ -74,6 +74,16 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
+    void captchaExpireSecondsShouldReturnCurrentConfigValue() throws Exception {
+        when(captchaService.getCaptchaExpireSeconds()).thenReturn(300L);
+
+        mockMvc.perform(get("/api/auth/captcha-expire-seconds"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").value(300));
+    }
+
+    @Test
     void loginShouldReturnValidationErrorWhenUsernameMissing() throws Exception {
         LoginDTO request = new LoginDTO();
         request.setPassword("123456");

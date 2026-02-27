@@ -6,7 +6,7 @@ import com.lunaroj.model.vo.CaptchaVO;
 import com.lunaroj.service.CaptchaService;
 import com.lunaroj.common.exception.BusinessException;
 import com.lunaroj.common.error.ErrorCode;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -18,10 +18,9 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
-@RequiredArgsConstructor
 public class CaptchaServiceImpl implements CaptchaService {
 
-    private static final Duration CAPTCHA_TTL = Duration.ofMinutes(5);
+    private static final long DEFAULT_CAPTCHA_EXPIRE_SECONDS = 300L;
     private static final String CAPTCHA_KEY_PREFIX = "auth:captcha:";
     private static final int CAPTCHA_WIDTH = 180;
     private static final int CAPTCHA_HEIGHT = 64;
@@ -38,6 +37,17 @@ public class CaptchaServiceImpl implements CaptchaService {
     private static final int CAPTCHA_FONT_MAX_SIZE = 48;
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final long captchaExpireSeconds;
+
+    public CaptchaServiceImpl(
+            StringRedisTemplate stringRedisTemplate,
+            @Value("${app.security.captcha.expire-seconds:300}") long captchaExpireSeconds
+    ) {
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.captchaExpireSeconds = captchaExpireSeconds > 0
+                ? captchaExpireSeconds
+                : DEFAULT_CAPTCHA_EXPIRE_SECONDS;
+    }
 
     @Override
     public CaptchaVO generateCaptcha() {
@@ -52,7 +62,7 @@ public class CaptchaServiceImpl implements CaptchaService {
         String code = captcha.getCode().toLowerCase(Locale.ROOT);
 
         String captchaKey = CAPTCHA_KEY_PREFIX + captchaId;
-        stringRedisTemplate.opsForValue().set(captchaKey, code, CAPTCHA_TTL);
+        stringRedisTemplate.opsForValue().set(captchaKey, code, Duration.ofSeconds(captchaExpireSeconds));
 
         return new CaptchaVO(captchaId, captcha.getImageBase64Data());
     }
@@ -69,6 +79,11 @@ public class CaptchaServiceImpl implements CaptchaService {
             throw new BusinessException(ErrorCode.CAPTCHA_INVALID);
         }
         stringRedisTemplate.delete(captchaKey);
+    }
+
+    @Override
+    public long getCaptchaExpireSeconds() {
+        return captchaExpireSeconds;
     }
 
     private Font randomComplexFont() {

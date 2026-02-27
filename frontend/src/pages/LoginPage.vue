@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import {
   clearAuthToken,
   fetchCaptcha,
+  fetchCaptchaExpireSeconds,
   fetchRegisterEnabled,
   getAuthToken,
   loginUser,
@@ -11,7 +12,7 @@ import {
 } from "../api";
 import logoUrl from "../assets/LunarOJ-icon.svg";
 
-const CAPTCHA_EXPIRE_MS = 5 * 60 * 1000;
+const DEFAULT_CAPTCHA_EXPIRE_MS = 5 * 60 * 1000;
 const router = useRouter();
 const route = useRoute();
 
@@ -20,6 +21,7 @@ const feedback = reactive({
   type: "",
   text: ""
 });
+const captchaExpireMs = ref(DEFAULT_CAPTCHA_EXPIRE_MS);
 const nowTs = ref(Date.now());
 let captchaTimerId = null;
 
@@ -42,6 +44,15 @@ const captcha = reactive({
 });
 
 const tokenInfo = ref(getAuthToken());
+const captchaRemainText = computed(() => {
+  if (!captcha.captchaId || !captcha.expiresAt) {
+    return "";
+  }
+  const remainSeconds = Math.max(Math.ceil((captcha.expiresAt - nowTs.value) / 1000), 0);
+  const minutes = Math.floor(remainSeconds / 60);
+  const seconds = remainSeconds % 60;
+  return `${minutes}分${String(seconds).padStart(2, "0")}秒`;
+});
 
 const tokenPreview = computed(() => {
   if (!tokenInfo.value?.accessToken) {
@@ -112,12 +123,23 @@ async function loadCaptcha() {
     const data = await fetchCaptcha();
     captcha.captchaId = data.captchaId;
     captcha.imageBase64 = normalizeCaptchaImageSrc(data.imageBase64);
-    captcha.expiresAt = Date.now() + CAPTCHA_EXPIRE_MS;
+    captcha.expiresAt = Date.now() + captchaExpireMs.value;
     loginForm.captchaCode = "";
   } catch (error) {
     setFeedback("error", error.message || "获取验证码失败，请重试。");
   } finally {
     loading.captchaLogin = false;
+  }
+}
+
+async function loadCaptchaExpireMs() {
+  try {
+    const expireSeconds = Number(await fetchCaptchaExpireSeconds());
+    if (Number.isFinite(expireSeconds) && expireSeconds > 0) {
+      captchaExpireMs.value = Math.round(expireSeconds * 1000);
+    }
+  } catch {
+    captchaExpireMs.value = DEFAULT_CAPTCHA_EXPIRE_MS;
   }
 }
 
@@ -196,7 +218,8 @@ onMounted(async () => {
   captchaTimerId = setInterval(() => {
     nowTs.value = Date.now();
   }, 1000);
-  await Promise.all([loadRegisterEnabled(), loadCaptcha()]);
+  await Promise.all([loadRegisterEnabled(), loadCaptchaExpireMs()]);
+  await loadCaptcha();
 
   const fromRegister = Array.isArray(route.query.fromRegister)
     ? route.query.fromRegister[0]
@@ -294,6 +317,10 @@ function goRegister() {
               {{ loading.captchaLogin ? "刷新中..." : "刷新验证码" }}
             </button>
           </div>
+
+          <p v-if="captcha.captchaId && !isCaptchaExpired()" class="captcha-countdown-tip">
+            验证码将在 {{ captchaRemainText }} 后失效，请及时提交
+          </p>
 
           <button
             v-if="isCaptchaExpired()"

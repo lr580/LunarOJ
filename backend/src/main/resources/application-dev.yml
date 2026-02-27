@@ -24,3 +24,5 @@ app:
       secret: ${JWT_SECRET:Generalized-SAM-Parent-Tree-Gaussian-Elimination-Probability-DP} #建议部署人员修改
       access-token-expire-seconds: ${JWT_ACCESS_EXPIRE_SECONDS:1800} # 30min
       refresh-token-expire-seconds: ${JWT_REFRESH_EXPIRE_SECONDS:604800} #7天
+    captcha:
+      expire-seconds: ${CAPTCHA_EXPIRE_SECONDS:300}
