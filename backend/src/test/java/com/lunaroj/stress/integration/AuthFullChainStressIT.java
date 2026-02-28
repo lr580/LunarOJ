@@ -77,7 +77,6 @@ class AuthFullChainStressIT {
 
             BurstMetrics metrics = runBurstRegister(users, config);
             assertBurstSucceeded("register", users.size(), metrics);
-
             Long persistedCount = jdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM `user` WHERE deleted_at IS NULL AND username LIKE ?",
                     Long.class,
